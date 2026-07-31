@@ -1,0 +1,32 @@
+name: Public integration issue
+description: Report a problem with the OpenAPI specification, Node.js helper or examples.
+title: "[Integration]: "
+labels: [integration]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include API keys, webhook secrets, customer information or security vulnerabilities. Follow SECURITY.md for private reports.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - OpenAPI specification
+        - Node.js helper
+        - Invoice example
+        - Webhook example
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include a minimal reproducible example using placeholder data.
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      placeholder: v20.x
