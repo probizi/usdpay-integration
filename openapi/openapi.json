@@ -1,0 +1,611 @@
+{
+  "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "USDPAY Merchant API",
+    "version": "2026-07-22",
+    "description": "Non-custodial USDT invoice API for BEP20, TON and TRC20. Secret keys must be used only from a trusted server.",
+    "contact": {
+      "name": "USDPAY Support",
+      "email": "support@usdpay.me",
+      "url": "https://usdpay.me/docs"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://usdpay.me",
+      "description": "Production"
+    }
+  ],
+  "externalDocs": {
+    "description": "Integration guide",
+    "url": "https://usdpay.me/docs"
+  },
+  "tags": [
+    {
+      "name": "Invoices",
+      "description": "Create and inspect merchant payment invoices."
+    }
+  ],
+  "security": [
+    {
+      "secretKey": []
+    }
+  ],
+  "paths": {
+    "/api/invoices": {
+      "get": {
+        "tags": ["Invoices"],
+        "operationId": "listInvoices",
+        "summary": "List invoices for the active store",
+        "responses": {
+          "200": {
+            "description": "Invoices belonging to the store selected by the secret key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Invoices"],
+        "operationId": "createInvoice",
+        "summary": "Create an invoice",
+        "description": "Create this request on the merchant backend. Reuse the same Idempotency-Key when retrying the same operation.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvoiceRequest"
+              },
+              "examples": {
+                "trc20": {
+                  "summary": "TRC20 invoice",
+                  "value": {
+                    "amount": "49.00",
+                    "orderId": "ORDER-1042",
+                    "network": "TRC20",
+                    "expiresInMinutes": 30,
+                    "callbackUrl": "https://merchant.example/usdpay/webhook",
+                    "returnUrl": "https://merchant.example/orders/1042"
+                  }
+                },
+                "customerChoosesNetwork": {
+                  "summary": "Customer chooses the network on checkout",
+                  "value": {
+                    "amount": "49.00",
+                    "orderId": "ORDER-1042",
+                    "callbackUrl": "https://merchant.example/usdpay/webhook"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "callbacks": {
+          "invoiceEvent": {
+            "{$request.body#/callbackUrl}": {
+              "$ref": "#/components/pathItems/WebhookReceiver"
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invoice created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateInvoiceResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "The Idempotency-Key was already used; the original invoice is returned with idempotent=true.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateInvoiceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "402": {
+            "$ref": "#/components/responses/BillingBlocked"
+          },
+          "409": {
+            "$ref": "#/components/responses/PaymentUnavailable"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/api/invoices/{invoiceId}": {
+      "get": {
+        "tags": ["Invoices"],
+        "operationId": "getInvoice",
+        "summary": "Get current invoice status",
+        "description": "This checkout status endpoint is public for anyone who has the unguessable invoice ID. A secret key is not required.",
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/InvoiceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current invoice and checkout availability.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicInvoiceResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "invoiceEvent": {
+      "$ref": "#/components/pathItems/WebhookReceiver"
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "secretKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "sk_live_...",
+        "description": "Store secret key from Dashboard > Integration. Never expose it in frontend code."
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "description": "Stable key for one create operation. Reuse it for retries.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "example": "ORDER-1042-create"
+        }
+      },
+      "InvoiceId": {
+        "name": "invoiceId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^inv_[A-Za-z0-9_-]+$",
+          "example": "inv_7Fq2xK9"
+        }
+      }
+    },
+    "headers": {
+      "WebhookSignature": {
+        "description": "HMAC-SHA256 of the raw JSON body using the store webhook secret.",
+        "schema": {
+          "type": "string",
+          "pattern": "^sha256=[a-f0-9]{64}$"
+        }
+      },
+      "WebhookEvent": {
+        "description": "Webhook event type.",
+        "schema": {
+          "$ref": "#/components/schemas/WebhookEventType"
+        }
+      },
+      "WebhookIdempotencyKey": {
+        "description": "Stable event key used to deduplicate deliveries.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "WebhookDelivery": {
+        "description": "Identifier of this delivery payload.",
+        "schema": {
+          "type": "string",
+          "pattern": "^evt_[A-Za-z0-9_-]+$"
+        }
+      }
+    },
+    "pathItems": {
+      "WebhookReceiver": {
+        "post": {
+          "summary": "Receive an invoice event",
+          "operationId": "receiveInvoiceEvent",
+          "security": [],
+          "parameters": [
+            {
+              "name": "X-USDPAY-Signature",
+              "in": "header",
+              "required": true,
+              "schema": {
+                "$ref": "#/components/headers/WebhookSignature/schema"
+              }
+            },
+            {
+              "name": "X-USDPAY-Event",
+              "in": "header",
+              "required": true,
+              "schema": {
+                "$ref": "#/components/schemas/WebhookEventType"
+              }
+            },
+            {
+              "name": "X-USDPAY-Idempotency-Key",
+              "in": "header",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "X-USDPAY-Delivery",
+              "in": "header",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "pattern": "^evt_[A-Za-z0-9_-]+$"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookPayload"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Any 2xx response acknowledges delivery."
+            },
+            "400": {
+              "description": "Other 4xx responses are terminal and are not retried."
+            },
+            "408": {
+              "description": "Retried with backoff."
+            },
+            "425": {
+              "description": "Retried with backoff."
+            },
+            "429": {
+              "description": "Retried with backoff."
+            },
+            "500": {
+              "description": "5xx responses are retried with backoff."
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "InvalidRequest": {
+        "description": "Validation or project-domain error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "amount": {
+                "value": {
+                  "error": "invalid_amount"
+                }
+              },
+              "domain": {
+                "value": {
+                  "error": "domain_mismatch"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Unauthenticated": {
+        "description": "Missing, invalid or rotated secret key.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "unauthenticated"
+            }
+          }
+        }
+      },
+      "BillingBlocked": {
+        "description": "Payments are blocked until the related USDPAY debt is paid.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BillingBlockedResponse"
+            }
+          }
+        }
+      },
+      "PaymentUnavailable": {
+        "description": "Wallet, review or store state prevents invoice creation.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Too many requests. Retry with exponential backoff and the same Idempotency-Key.",
+        "headers": {
+          "Retry-After": {
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "rate_limited"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Invoice not found.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "not_found"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Network": {
+        "type": "string",
+        "enum": ["BEP20", "TON", "TRC20"]
+      },
+      "InvoiceStatus": {
+        "type": "string",
+        "enum": ["created", "pending", "underpaid", "paid", "expired", "manual_review"]
+      },
+      "WebhookEventType": {
+        "type": "string",
+        "enum": ["invoice.paid", "invoice.expired"]
+      },
+      "CreateInvoiceRequest": {
+        "type": "object",
+        "required": ["amount"],
+        "properties": {
+          "amount": {
+            "description": "Requested amount in USDT. A decimal string is recommended.",
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9]+(?:\\.[0-9]+)?$",
+                "example": "49.00"
+              },
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            ]
+          },
+          "orderId": {
+            "type": "string",
+            "maxLength": 300,
+            "example": "ORDER-1042"
+          },
+          "network": {
+            "$ref": "#/components/schemas/Network"
+          },
+          "expiresInMinutes": {
+            "type": "integer",
+            "minimum": 15,
+            "maximum": 60,
+            "default": 30
+          },
+          "callbackUrl": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 300,
+            "description": "HTTPS endpoint on the project domain or an allowed integration domain."
+          },
+          "returnUrl": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 300,
+            "description": "Customer return URL on the project domain or an allowed integration domain. If omitted, the store return URL or primary website is used."
+          }
+        }
+      },
+      "PartialPayment": {
+        "type": "object",
+        "properties": {
+          "txHash": { "type": "string" },
+          "explorerHash": { "type": "string" },
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "amount": { "type": "string" },
+          "amountUnits": { "type": "string" },
+          "blockTime": { "type": "string", "format": "date-time" },
+          "allocationStatus": { "type": "string" },
+          "explorerUrl": { "type": "string", "format": "uri" }
+        }
+      },
+      "Invoice": {
+        "type": "object",
+        "required": ["id", "source", "orderId", "requestedAmount", "status", "checkoutUrl", "createdAt", "expiresAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "inv_7Fq2xK9"
+          },
+          "kind": { "type": "string", "example": "merchant_payment" },
+          "source": { "type": "string", "enum": ["api", "dashboard", "legacy", "system"] },
+          "idempotencyKey": { "type": "string", "example": "ORDER-1042-create" },
+          "merchantId": { "type": "string" },
+          "storeId": { "type": "string" },
+          "orderId": { "type": "string", "example": "ORDER-1042" },
+          "requestedAmount": { "type": "string", "example": "49.00" },
+          "requestedAmountUnits": { "type": "string" },
+          "exactAmount": { "type": ["string", "null"], "example": "49.03" },
+          "exactAmountUnits": { "type": ["string", "null"] },
+          "network": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/Network" },
+              { "type": "null" }
+            ]
+          },
+          "networkChoice": { "type": "string", "enum": ["merchant", "customer"] },
+          "status": { "$ref": "#/components/schemas/InvoiceStatus" },
+          "statusReason": { "type": "string" },
+          "receivedAmount": { "type": "string" },
+          "receivedAmountUnits": { "type": "string" },
+          "remainingAmount": { "type": ["string", "null"] },
+          "remainingAmountUnits": { "type": ["string", "null"] },
+          "overpaidAmount": { "type": "string" },
+          "overpaidAmountUnits": { "type": "string" },
+          "partialPayments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PartialPayment" }
+          },
+          "paymentAddress": { "type": ["string", "null"] },
+          "matchingMode": { "type": ["string", "null"] },
+          "callbackUrl": { "type": "string" },
+          "returnUrl": { "type": "string" },
+          "checkoutUrl": { "type": "string", "format": "uri" },
+          "txHash": { "type": "string" },
+          "explorerHash": { "type": "string" },
+          "fromAddress": { "type": "string" },
+          "toAddress": { "type": "string" },
+          "paidAt": { "type": ["string", "null"], "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "explorerUrl": { "type": "string" }
+        }
+      },
+      "CreateInvoiceResponse": {
+        "type": "object",
+        "required": ["invoice"],
+        "properties": {
+          "invoice": { "$ref": "#/components/schemas/Invoice" },
+          "idempotent": { "type": "boolean", "default": false }
+        }
+      },
+      "InvoiceListResponse": {
+        "type": "object",
+        "required": ["invoices"],
+        "properties": {
+          "invoices": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Invoice" }
+          }
+        }
+      },
+      "PublicInvoiceResponse": {
+        "type": "object",
+        "required": ["invoice", "availableNetworks", "acceptingPayments"],
+        "properties": {
+          "invoice": { "$ref": "#/components/schemas/Invoice" },
+          "merchant": { "type": ["object", "null"], "additionalProperties": true },
+          "store": { "type": ["object", "null"], "additionalProperties": true },
+          "availableNetworks": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Network" }
+          },
+          "acceptingPayments": { "type": "boolean" },
+          "riskBlock": { "type": "object", "additionalProperties": true },
+          "billingBlock": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "WebhookPayload": {
+        "type": "object",
+        "required": ["id", "type", "event", "idempotency_key", "created_at", "invoice"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^evt_[A-Za-z0-9_-]+$" },
+          "type": { "$ref": "#/components/schemas/WebhookEventType" },
+          "event": { "$ref": "#/components/schemas/WebhookEventType" },
+          "idempotency_key": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "invoice": { "$ref": "#/components/schemas/Invoice" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": { "type": "string" },
+          "status": { "type": "string" },
+          "enabled": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Network" }
+          }
+        },
+        "additionalProperties": true
+      },
+      "BillingBlockedResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ErrorResponse" },
+          {
+            "type": "object",
+            "required": ["billingBlock"],
+            "properties": {
+              "error": { "const": "billing_blocked" },
+              "billingBlock": { "type": "object", "additionalProperties": true }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
