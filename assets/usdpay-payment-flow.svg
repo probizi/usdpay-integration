@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">USDPAY non-custodial USDT payment flow</title>
+  <desc id="desc">A customer opens USDPAY checkout and sends USDT directly to the merchant wallet. USDPAY confirms the blockchain transaction and notifies the merchant backend.</desc>
+  <rect width="1200" height="520" rx="32" fill="#f5f5f3"/>
+  <circle cx="1082" cy="82" r="118" fill="#dff6e9"/>
+  <circle cx="100" cy="500" r="118" fill="#ebe7ff"/>
+  <text x="64" y="72" font-family="Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="2" fill="#159957">NON-CUSTODIAL PAYMENT</text>
+  <text x="64" y="116" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#111111">How a USDPAY payment works</text>
+  <text x="64" y="148" font-family="Arial, sans-serif" font-size="17" fill="#666666">Funds move directly to the merchant wallet. USDPAY confirms the result.</text>
+  <g transform="translate(64 205)">
+    <rect width="250" height="160" rx="20" fill="#ffffff" stroke="#dededb"/>
+    <circle cx="38" cy="40" r="18" fill="#ebe7ff"/>
+    <path d="M30 40h16M38 32v16" stroke="#6557b8" stroke-width="3" stroke-linecap="round"/>
+    <text x="28" y="83" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#111111">Customer</text>
+    <text x="28" y="112" font-family="Arial, sans-serif" font-size="15" fill="#777777">Opens checkout and</text>
+    <text x="28" y="134" font-family="Arial, sans-serif" font-size="15" fill="#777777">chooses a network</text>
+  </g>
+  <path d="M330 285h76" stroke="#aaa9a4" stroke-width="3" stroke-linecap="round"/>
+  <path d="m394 273 14 12-14 12" fill="none" stroke="#aaa9a4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(426 205)">
+    <rect width="250" height="160" rx="20" fill="#ffffff" stroke="#dededb"/>
+    <rect x="27" y="23" width="38" height="38" rx="10" fill="#111111"/>
+    <rect x="36" y="32" width="8" height="8" rx="2" fill="#ffffff"/><rect x="49" y="32" width="8" height="8" rx="2" fill="#ffffff"/><rect x="36" y="45" width="8" height="8" rx="2" fill="#ffffff"/><rect x="51" y="47" width="5" height="5" rx="1" fill="#ffffff"/>
+    <text x="28" y="83" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#111111">USDPAY checkout</text>
+    <text x="28" y="112" font-family="Arial, sans-serif" font-size="15" fill="#777777">Shows the exact amount</text>
+    <text x="28" y="134" font-family="Arial, sans-serif" font-size="15" fill="#777777">and wallet address</text>
+  </g>
+  <path d="M692 285h76" stroke="#aaa9a4" stroke-width="3" stroke-linecap="round"/>
+  <path d="m756 273 14 12-14 12" fill="none" stroke="#aaa9a4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(788 205)">
+    <rect width="348" height="160" rx="20" fill="#111111"/>
+    <rect x="28" y="24" width="44" height="34" rx="9" fill="#272727" stroke="#62d59b" stroke-width="2"/>
+    <path d="M38 34h24v14H38z" fill="none" stroke="#62d59b" stroke-width="2"/>
+    <text x="28" y="83" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#ffffff">Merchant wallet</text>
+    <text x="28" y="112" font-family="Arial, sans-serif" font-size="15" fill="#b9b9b9">Receives USDT directly</text>
+    <text x="28" y="134" font-family="Arial, sans-serif" font-size="15" fill="#b9b9b9">on TRC20, BEP20 or TON</text>
+  </g>
+  <path d="M551 366v41" stroke="#22b76b" stroke-width="3" stroke-dasharray="7 7"/>
+  <path d="m541 396 10 13 10-13" fill="none" stroke="#22b76b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(286 417)">
+    <rect width="628" height="72" rx="18" fill="#ffffff" stroke="#dededb"/>
+    <circle cx="39" cy="36" r="18" fill="#28bd73"/>
+    <path d="m30 36 6 6 12-14" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="72" y="31" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#111111">USDPAY confirms the transaction</text>
+    <text x="72" y="52" font-family="Arial, sans-serif" font-size="14" fill="#777777">A signed webhook tells the merchant backend to fulfil the order</text>
+    <rect x="531" y="21" width="72" height="30" rx="15" fill="#e1f7eb"/>
+    <text x="550" y="41" font-family="monospace" font-size="13" font-weight="700" fill="#159957">PAID ✓</text>
+  </g>
+</svg>
