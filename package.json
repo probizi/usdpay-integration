@@ -1,0 +1,13 @@
+{
+  "name": "usdpay-integration-resources",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Public USDPAY API specification, Node.js helper and integration examples.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node tests/sdk.test.cjs && node scripts/validate-public-repo.cjs"
+  }
+}
