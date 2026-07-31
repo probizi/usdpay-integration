@@ -1,0 +1,11 @@
+{
+  "name": "@usdpay/node-source",
+  "version": "1.0.0",
+  "description": "Dependency-free reference client for the USDPAY Merchant API.",
+  "main": "index.cjs",
+  "type": "commonjs",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
